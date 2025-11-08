@@ -7,8 +7,7 @@ st.set_page_config(page_title="Secure Streamlit Portal", page_icon="🔐")
 st.title("🔐 Secure Streamlit Portal")
 
 
-flow_url = st.secrets.get("FLOW_VALIDATE_URL") or "https://a3c669f6ac2e4e77ad43beab3e15be.e7.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/97857491b2454e84a8805a65aca4e310/triggers/manual/paths/invoke?api-version=1"
-
+flow_url = "https://a3c669f6ac2e4e77ad43beab3e15be.e7.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/f44a57fec3b8483caf4d48a404898a93/triggers/manual/paths/invoke?api-version=1"
 params = st.experimental_get_query_params()
 email_param = params.get("email", [""])[0]
 token_param = params.get("token", [""])[0]
