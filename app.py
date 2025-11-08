@@ -1,42 +1,39 @@
 import streamlit as st
-import requests
-import os
 
-
-st.set_page_config(page_title="Secure Streamlit Portal", page_icon="🔐")
+# ---------------------------
+# Streamlit page setup
+# ---------------------------
+st.set_page_config(page_title="Secure Streamlit Portal", layout="centered")
 st.title("🔐 Secure Streamlit Portal")
 
-
-flow_url = "https://a3c669f6ac2e4e77ad43beab3e15be.e7.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fdc9d1434aca43a5941d87069e6590da/triggers/manual/paths/invoke?api-version=1"
+# ---------------------------
+# Get query parameters from URL
+# ---------------------------
 params = st.experimental_get_query_params()
-email_param = params.get("email", [""])[0]
-token_param = params.get("token", [""])[0]
+url_email = params.get("email", [""])[0]
+token = params.get("token", [""])[0]  # raw token from URL (hidden from user)
 
-if not email_param or not token_param:
-    st.error("Missing access parameters. Please launch the app via Power Apps.")
+if not url_email or not token:
+    st.error("Missing access parameters. Please launch via Power Apps.")
     st.stop()
 
-st.write("Please confirm your email to access the portal.")
-
-user_input = st.text_input("Enter your email:", value=email_param)
+# ---------------------------
+# Input field for user email
+# ---------------------------
+user_email = st.text_input("Enter your email to access the portal:")
 
 if st.button("Submit"):
-    # Prepare JSON payload
-    payload = {
-        "email": user_input,
-        "token": token_param
-    }
+    if not user_email:
+        st.error("Please enter your email.")
+    elif user_email.strip().lower() != url_email.strip().lower():
+        st.error("❌ Email does not match the link.")
+    else:
+        st.success(f"✅ Access granted! Welcome {user_email}")
+        
+        # ---------------------------
+        # Main secure content goes here
+        # ---------------------------
+        st.write("This is your secure Streamlit portal content.")
 
-    try:
-        response = requests.post(flow_url, json=payload)
-        response.raise_for_status()  # Raise error if HTTP status is not 200
-        result = response.json()
-
-        # Check validation
-        if result.get("valid"):
-            st.success(f"✅ Access granted! Welcome {user_input}")
-            st.write("This is your Streamlit portal content.")
-        else:
-            st.error("❌ Invalid email or token.")
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error connecting to validation service: {e}")
+        # Optional: you can internally log the token or use it for future server-side validation
+        # st.write(f"Token (hidden from user) for internal validation: {token}")
