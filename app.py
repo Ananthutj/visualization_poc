@@ -12,7 +12,7 @@ decoded = base64.b64decode(data_encoded).decode("utf-8")
 url_email, token = decoded.split(":")
 
 # Ask user to enter email
-user_email = st.text_input("Enter your corporate email:")
+user_email = st.text_input("Enter your email:")
 
 if st.button("Submit"):
     if user_email.strip().lower() != url_email.strip().lower():
