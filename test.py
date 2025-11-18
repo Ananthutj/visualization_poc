@@ -1,108 +1,251 @@
-# import streamlit as st
-# import pandas as pd
-# import matplotlib.pyplot as plt
-# from matplotlib.patches import Rectangle, FancyArrow
-# from PIL import Image
-# import os
+import streamlit as st
+import base64
 
-# # Set up folders and file paths
-# input_excel = "Sooraj_poc_sample.xlsx"
-# output_folder = "output_images"
-# os.makedirs(output_folder, exist_ok=True)
+st.set_page_config(page_title="Secure Streamlit Portal", layout="centered")
+st.title("🔐 Secure Streamlit Portal")
 
-# # Title of the app
-# st.title("Generated Relationship Diagrams")
+params = st.query_params
+encoded_data = params.get("data", [""])[0]
 
-# # Generate images only once
-# if "images_generated" not in st.session_state:
-#     try:
-#         df = pd.read_excel(input_excel)
-#         required_cols = ["Product", "Context", "Source", "Relation", "Target"]
-#         if not all(col in df.columns for col in required_cols):
-#             st.error(f"Excel must have columns: {required_cols}")
-#         else:
-#             for (product, context), group in df.groupby(["Product", "Context"]):
-#                 for idx, row in group.iterrows():
-#                     source = row["Source"]
-#                     relation = row["Relation"]
-#                     target = row["Target"]
+if not encoded_data:
+    st.error("Invalid access. Please open this app through Power Apps.")
+    st.stop()
 
-#                     fig, ax = plt.subplots(figsize=(6, 3))
-#                     ax.set_xlim(0, 10)
-#                     ax.set_ylim(0, 5)
-#                     ax.axis("off")
+try:
+    decoded_email = base64.b64decode(encoded_data).decode("utf-8")
+except Exception:
+    st.error("Invalid or corrupted link.")
+    st.stop()
 
-#                     ax.text(5, 4.5, f"Product: {product} | Context: {context}",
-#                             ha="center", va="center", fontsize=12, fontweight="bold")
+# Session state for login
+if "verified" not in st.session_state:
+    st.session_state.verified = False
 
-#                     src_x, src_y, box_w, box_h = 1, 2, 2, 1
-#                     ax.add_patch(Rectangle((src_x, src_y), box_w, box_h,
-#                                            facecolor="#0a5d7a", edgecolor="black"))
-#                     ax.text(src_x + box_w / 2, src_y + box_h / 2, source,
-#                             ha="center", va="center", color="white", fontsize=10)
+# If NOT verified → show login screen
+if not st.session_state.verified:
 
-#                     tgt_x = 6
-#                     ax.add_patch(Rectangle((tgt_x, src_y), box_w, box_h,
-#                                            facecolor="#0a5d7a", edgecolor="black"))
-#                     ax.text(tgt_x + box_w / 2, src_y + box_h / 2, target,
-#                             ha="center", va="center", color="white", fontsize=10)
+    st.write("Please verify your email to continue:")
+    user_email = st.text_input("Enter your company email:")
 
-#                     arrow_x = src_x + box_w
-#                     arrow_y = src_y + box_h / 2
-#                     ax.add_patch(FancyArrow(arrow_x, arrow_y, tgt_x - arrow_x, 0,
-#                                             width=0.05, head_width=0.3, head_length=0.3, color="black"))
+    if st.button("Verify"):
+        if not user_email:
+            st.warning("Please enter your email.")
+        elif user_email.strip().lower() == decoded_email.strip().lower():
+            st.session_state.verified = True
+            st.session_state.user_email = user_email
+            st.experimental_rerun()
+        else:
+            st.error("Email does not match. Access denied.")
 
-#                     ax.text((arrow_x + tgt_x) / 2, arrow_y + 0.3, relation,
-#                             ha="center", va="center", fontsize=10)
+# If STILL not verified → STOP ENTIRE APP
+if not st.session_state.verified:
+    st.stop()
 
-#                     out_name = f"{output_folder}/{product}_{context}_{idx}.png"
-#                     plt.savefig(out_name, bbox_inches="tight")
-#                     plt.close(fig)
+# ------------------------------------------------------
+# STEP 2 — SHOW YOUR DATA-FLOW GRAPH ONLY AFTER LOGIN
+# ------------------------------------------------------
 
-#             st.session_state.images_generated = True
-#             st.success("Images generated successfully.")
-#     except Exception as e:
-#         st.error(f"Error generating images: {e}")
+st.success(f"Access granted! Welcome, {st.session_state.user_email}")
 
-# # Display images
-# if os.path.exists(output_folder):
-#     image_files = sorted([f for f in os.listdir(output_folder) if f.endswith(".png")])
-#     products = sorted(set(f.split("_")[0] for f in image_files if "_" in f))
-#     contexts = sorted(set(f.split("_")[1] for f in image_files if "_" in f))
+# ---- FROM HERE, YOUR ORIGINAL STEP 2 CODE GOES BELOW ----
 
-#     selected_product = st.selectbox("Select Product (leave empty to show all)", [""] + products)
-#     selected_context = st.selectbox("Select Context (leave empty to show all)", [""] + contexts)
+import pandas as pd
+import requests
+from io import BytesIO
+import graphviz
+import textwrap
+import warnings
 
-#     for image_file in image_files:
-#         parts = image_file.split("_")
-#         if len(parts) >= 3:
-#             product_match = (selected_product == "" or parts[0] == selected_product)
-#             context_match = (selected_context == "" or parts[1] == selected_context)
-#             if product_match and context_match:
-#                 image_path = os.path.join(output_folder, image_file)
-#                 image = Image.open(image_path)
-#                 st.image(image, caption=image_file, use_container_width=True)
-# else:
-#     st.error(f"Folder '{output_folder}' not found.")
+st.set_page_config(page_title="Data Flow Graph", layout="wide")
+st.title("L-R Directed Data Flow")
 
+warnings.filterwarnings("ignore", message="Unverified HTTPS request")
 
-import os, matplotlib.pyplot as plt, pandas as pd
+flow_url = "https://a3c669f6ac2e4e77ad43beab3e15be.e7.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/9bbd04c700e5438ca0ec6aa713184b3e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=FqSuf_iO1-00D6qk01t0UjcxKN0GL5w6bk1cTTljaLY"
 
-# Get OneDrive path
-onedrive_path = os.environ.get("OneDrive")
-if not onedrive_path:
-    raise Exception("OneDrive folder not found. Make sure OneDrive is running.")
+st.info("Fetching Excel from SharePoint via Power Automate...")
 
-# Create folder
-folder = os.path.join(onedrive_path, "Documents", "PowerAppsVisuals")
-os.makedirs(folder, exist_ok=True)
+try:
+    response = requests.post(flow_url, json={}, verify=False)
+    response.raise_for_status()
 
-# Save chart
-output_path = os.path.join(folder, "sales_chart.png")
-data = {'Month': ['Jan','Feb','Mar'], 'Sales': [150,200,180]}
-df = pd.DataFrame(data)
-df.plot(kind='bar', x='Month', y='Sales', color='skyblue')
-plt.savefig(output_path)
-plt.close()
+    content_type = response.headers.get("Content-Type", "")
+    excel_bytes = None
 
-print(f"Chart saved at {output_path}")
+    if "application/json" in content_type:
+        file_json = response.json()
+        for key in ["file", "fileContent", "body", "content"]:
+            if key in file_json:
+                excel_bytes = base64.b64decode(file_json[key])
+                break
+        if excel_bytes is None:
+            raise ValueError("No base64 Excel content found in JSON response")
+    else:
+        excel_bytes = response.content
+
+    excel_data = BytesIO(excel_bytes)
+    df = pd.read_excel(excel_data, sheet_name="LineageFile")
+    df_desc = pd.read_excel(excel_data, sheet_name="Source Master")
+
+    df = df.fillna("")
+    df_desc = df_desc.fillna("")
+
+    st.success(f"✅ Loaded {len(df)} rows from SharePoint Excel")
+
+except Exception as e:
+    st.error(f"❌ Failed to load Excel: {e}")
+    st.stop()
+
+with st.expander("🔍 Preview Data"):
+    st.write("**Lineage File:**")
+    st.dataframe(df)
+    st.write("**Source Master:**")
+    st.dataframe(df_desc)
+
+df.columns = df.columns.str.strip().str.lower()
+df.rename(
+    columns={
+        "product": "Product",
+        "source system": "Source",
+        "connection": "Connection",
+        "target system": "Target",
+        "upstream system": "Upstream",
+        "downstream system": "Downstream",
+    },
+    inplace=True,
+)
+
+st.sidebar.header("🎛️ Filters")
+
+show_with_products = st.sidebar.checkbox("Summary Graph", value=False)
+show_without_products = st.sidebar.checkbox("Detailed Graph", value=True)
+
+upstream_options = ["All"] + sorted(df["Upstream"].dropna().unique().tolist())
+product_options = ["All"] + sorted(df["Product"].dropna().unique().tolist())
+target_options = ["All"] + sorted(df["Target"].dropna().unique().tolist())
+
+upstream_filter = st.sidebar.selectbox("Upstream System:", upstream_options)
+product_filter = st.sidebar.selectbox("Product:", product_options)
+target_filter = st.sidebar.selectbox("Target System:", target_options)
+
+filtered_df = df.copy()
+
+if upstream_filter != "All":
+    filtered_df = filtered_df[filtered_df["Upstream"] == upstream_filter]
+if product_filter != "All":
+    filtered_df = filtered_df[filtered_df["Product"] == product_filter]
+if target_filter != "All":
+    filtered_df = filtered_df[filtered_df["Target"] == target_filter]
+
+filtered_upstreams = ["All"] + sorted(filtered_df["Upstream"].dropna().unique().tolist())
+filtered_products = ["All"] + sorted(filtered_df["Product"].dropna().unique().tolist())
+filtered_targets = ["All"] + sorted(filtered_df["Target"].dropna().unique().tolist())
+
+with st.sidebar.expander("🧠 Available Options (after filtering)"):
+    st.write("Upstream:", filtered_upstreams)
+    st.write("Product:", filtered_products)
+    st.write("Target:", filtered_targets)
+
+if not show_with_products and not show_without_products:
+    st.sidebar.warning("⚠️ Please select at least one graph type to display.")
+    st.stop()
+
+unique_edges = filtered_df[["Source", "Connection", "Target"]].drop_duplicates()
+
+products_by_pair = (
+    filtered_df.groupby(["Source", "Target"])["Product"]
+    .apply(lambda x: sorted(set(x.dropna())))
+    .to_dict()
+)
+
+sources = set(unique_edges["Source"])
+targets = set(unique_edges["Target"])
+upstream_nodes = sources - targets
+downstream_nodes = targets - sources
+
+def get_color(node):
+    if node in upstream_nodes:
+        return "#6DB4ED"
+    elif node in downstream_nodes:
+        return "#4CAF50"
+    else:
+        return "#FFC107"
+
+def wrap_text(text, width=30):
+    import textwrap
+    return "<BR/>".join(textwrap.wrap(text, width=width))
+
+def add_node(dot_obj, node, color, include_products=False):
+    if not node or str(node).strip() == "":
+        return
+
+    node = str(node).strip()
+
+    incoming, outgoing = [], []
+    for (src, tgt), plist in products_by_pair.items():
+        if str(tgt).strip() == node:
+            incoming.extend(plist)
+        if str(src).strip() == node:
+            outgoing.extend(plist)
+
+    incoming, outgoing = sorted(set(incoming)), sorted(set(outgoing))
+
+    source_row = df_desc[df_desc["Source_Code"].astype(str).str.strip() == node]
+    system_name = source_row["Source_System"].iloc[0] if not source_row.empty else ""
+    desc = source_row["Source_Desc"].iloc[0] if not source_row.empty else ""
+
+    header_lines = f"""
+    <TABLE BORDER="0" CELLBORDER="0" CELLPADDING="1" CELLSPACING="0">
+        <TR><TD ALIGN="CENTER"><B><FONT POINT-SIZE='10'>{node.upper()}</FONT></B></TD></TR>
+        <TR><TD ALIGN="CENTER"><FONT POINT-SIZE='10'>{system_name}</FONT></TD></TR>
+        <TR><TD ALIGN="CENTER"><FONT POINT-SIZE='10'>{desc}</FONT></TD></TR>
+    </TABLE>
+    """
+
+    rows = f"<TR><TD ALIGN='CENTER'>{header_lines}</TD></TR>"
+
+    if include_products:
+        rows += """<TR><TD BGCOLOR="black" HEIGHT="1" WIDTH="100%"></TD></TR>"""
+        rows += """<TR><TD ALIGN="CENTER"><FONT POINT-SIZE="10"><B><U>Products:</U></B></FONT></TD></TR>"""
+        all_products = sorted(set(incoming + outgoing))
+        for p in all_products:
+            rows += f"<TR><TD ALIGN='CENTER'><FONT POINT-SIZE='10'>{wrap_text(str(p), 30)}</FONT></TD></TR>"""
+
+    label = f"""<
+    <TABLE BORDER="1" CELLBORDER="0" CELLPADDING="3" CELLSPACING="0" ALIGN="CENTER" BGCOLOR="{color}">
+        {rows}
+    </TABLE>
+    >"""
+
+    import graphviz
+    dot_obj.node(node, label=label, shape="none", fontsize="16", fontname="Arial")
+
+def build_graph(include_products=False):
+    import graphviz
+    dot = graphviz.Digraph(format="svg")
+    dot.attr(rankdir="LR", fontname="Calibri")
+    added_nodes = set()
+
+    for _, row in unique_edges.iterrows():
+        s, c, t = str(row["Source"]).strip(), str(row["Connection"]).strip(), str(row["Target"]).strip()
+        if not s or not t:
+            continue
+
+        if s not in added_nodes:
+            add_node(dot, s, get_color(s), include_products)
+            added_nodes.add(s)
+        if t not in added_nodes:
+            add_node(dot, t, get_color(t), include_products)
+            added_nodes.add(t)
+
+        dot.edge(s, t, label=str(c))
+
+    return dot
+
+if show_without_products:
+    st.subheader("📘 Detailed Graph")
+    st.graphviz_chart(build_graph(include_products=False), use_container_width=True)
+
+if show_with_products:
+    st.subheader("📗 Summary Graph")
+    st.graphviz_chart(build_graph(include_products=True), use_container_width=True)

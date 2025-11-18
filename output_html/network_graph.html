@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 950px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#FFD700", "font": {"color": "black"}, "id": "murex", "label": "murex", "shape": "box", "title": "\n             System Name:  murex Source System \n             Type:  File \n             Description:  murex Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "exporvmd", "label": "exporvmd", "shape": "box", "title": "\n             System Name:  exporvmd Source System \n             Type:  File \n             Description:  exporvmd Description\n        "}, {"color": "#79BAEC", "font": {"color": "black"}, "id": "FSDF", "label": "FSDF", "shape": "box", "title": "\n             System Name:  FSDF Source System \n             Type:  DB \n             Description:  FSDF Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "ubix", "label": "ubix", "shape": "box", "title": "\n             System Name:  ubix Source System \n             Type:  File \n             Description:  ubix Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "unitrax", "label": "unitrax", "shape": "box", "title": "\n             System Name:  unitrax Source System \n             Type:  File \n             Description:  unitrax Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "eagle", "label": "eagle", "shape": "box", "title": "\n             System Name:  eagle Source System \n             Type:  File \n             Description:  eagle Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "sgf", "label": "sgf", "shape": "box", "title": "\n             System Name:  sgf Source System \n             Type:  File \n             Description:  sgf Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "fiserv", "label": "fiserv", "shape": "box", "title": "\n             System Name:  fiserv Source System \n             Type:  File \n             Description:  fiserv Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "sic", "label": "sic", "shape": "box", "title": "\n             System Name:  sic Source System \n             Type:  File \n             Description:  sic Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "dflb", "label": "dflb", "shape": "box", "title": "\n             System Name:  dflb Source System \n             Type:  File \n             Description:  dflb Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "sophy", "label": "sophy", "shape": "box", "title": "\n             System Name:  sophy Source System \n             Type:  File \n             Description:  sophy Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "anvil", "label": "anvil", "shape": "box", "title": "\n             System Name:  anvil Source System \n             Type:  File \n             Description:  anvil Description\n        "}, {"color": "#00874D", "font": {"color": "black"}, "id": "Adaptiv", "label": "Adaptiv", "shape": "box", "title": "\n             System Name:  Adaptiv Source System \n             Type:  File \n             Description:  Adaptiv Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "expor", "label": "expor", "shape": "box", "title": "\n             System Name:  expor Source System \n             Type:  File \n             Description:  expor Description\n        "}, {"color": "#79BAEC", "font": {"color": "black"}, "id": "Hogan", "label": "Hogan", "shape": "box", "title": "\n             System Name:  hogan Source System \n             Type:  File \n             Description:  hogan Description\n        "}, {"color": "#00874D", "font": {"color": "black"}, "id": "QRM", "label": "QRM", "shape": "box", "title": "\n             System Name:  QRM Source System \n             Type:  File \n             Description:  QRM Description\n        "}, {"color": "#00874D", "font": {"color": "black"}, "id": "TRM", "label": "TRM", "shape": "box", "title": "\n             System Name:  TRM Source System \n             Type:  File \n             Description:  TRM Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "flex", "label": "flex", "shape": "box", "title": "\n             System Name:  flex Source System \n             Type:  File \n             Description:  flex Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "bondedge", "label": "bondedge", "shape": "box", "title": "\n             System Name:  bondedge Source System \n             Type:  File \n             Description:  bondedge Description\n        "}, {"color": "#79BAEC", "font": {"color": "black"}, "id": "ORM", "label": "ORM", "shape": "box", "title": "\n             System Name:  ORM Source System \n             Type:  File \n             Description:  ORM Description\n        "}, {"color": "#FFD700", "font": {"color": "black"}, "id": "valmobil", "label": "valmobil", "shape": "box", "title": "\n             System Name:  valmobil Source System \n             Type:  File \n             Description:  valmobil Description\n        "}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#FFA500", "dashes": false, "from": "Adaptiv", "label": "DIH", "title": "\n         Products: Bond, Debenture, Mid term note, FUNDED CDO\n    ", "to": "ORM"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "ORM", "label": "MFT", "title": "\n         Products: CARDS\n    ", "to": "Hogan"}, {"arrows": "to", "color": "#FFA500", "dashes": false, "from": "ORM", "label": "DIH", "title": "\n         Products: Preferred_Stocks, Obligation Adossee a des Actifs\n    ", "to": "TRM"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "ORM", "label": "MFT", "title": "\n         Products: LOANS\n    ", "to": "expor"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "FSDF", "label": "MFT", "title": "\n         Products: SET ACSS, Bond, Bond, Bond, Bond, Debenture, Debenture, Debenture, Debenture, Mid term note, Mid term note, Mid term note, Mid term note, FUNDED CDO, FUNDED CDO, FUNDED CDO, FUNDED CDO, CASH MARGIN ACCOUNT - CASH, CASH MARGIN ACCOUNT - SECURITY, COLLATERAL CDO, CDO ACCOUNT- CASH, CDO ACCOUNT- SECURITY, COMMODITY FUTURE, COMMODITY FUTURE, COMMODITY OPTION OTC, COMMODITY FUTURE OPTION, CDS Single Name, CDS Single Name, CDS Single Name, CDX, CDX, CDX, Cross currency Swap, CUSTODIAN ACCOUNT - CASH, CUSTODIAN ACCOUNT - SECURITY, CURRENCY CONVERSION, Cash Collateral Deriv, Cash Collateral Deriv, Cash Collateral Deriv, SECURITY COLLATERAL DERIV, SECURITY COLLATERAL DERIV, SECURITY COLLATERAL DERIV, CASH COLLATERAL, CASH COLLATERAL, CASH COLLATERAL, SECURITY COLLATERAL, SECURITY COLLATERAL, SECURITY COLLATERAL, Equity Index Future, Equity Index Future, EQUITY FUTURE, EQUITY FUTURE, Equity Future Option, Equity Future Option, Equity Future Option, Equity Index Future Option, Equity Index Future Option, Equity Index Future Option, Equity Index-Basket Option, Equity Index-Basket Option, Equity Index-Basket Option, Equity Option, Equity Option, Equity Option, Warrant, Warrant, Warrant, EQUITY INDEX SWAP, EQUITY INDEX SWAP, Equity TRS, Equity TRS, LOAN, LOAN, LINE OF CREDIT, LINE OF CREDIT, FX Average Rate Forward Strip, FX Average Rate Forward Strip, FX Average Rate Fwd Explicit, FX Average Rate Fwd Explicit, FX Average Strike Forward, FX Average Strike Forward, FX Forward, FX Forward, FX Forward Strip, FX Forward Strip, FX NonDeliverable Forward, FX NonDeliverable Forward, FX Spot, FX Spot, FX Time Option, FX Time Option, FX Future, FX Future\n    ", "to": "Adaptiv"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "FSDF", "label": "MFT", "title": "\n         Products: Acceptations achetees, Actions, Actions, Autres, Lettre de credit, Lettre de credit, Lettre de garantie, Lettre de garantie, Lettre de garantie, Ligne de credit Main Line, Marge Classique/Decouvert, Marge Classique/Decouvert, Marge Classique/Decouvert, Marge de credit hypothecaire, Marge de credit hypothecaire, Nostros, Vostros, Futures/Forward - Obligations, Futures/Forward - Obligations, Options - Taux d\u0027interet - Cap, Certificat de depot, Certificat de depot, Certificat de depot, Certificat de depot, Epargne, Epargne, Epargne, Epargne, Epargne avec operations, Epargne avec operations, Epargne avec operations, Epargne avec operations, Epargne avec operations, Prets, Prets, Prets, Prets, Prets, Marge de credit hypothecaire, Prets Hypothecaires, Prets Hypothecaires, Prets Hypothecaires, Prets etudiants, Repo, Reverse Repo, Billets, Billets au porteur a escompte, Billets au porteur a escompte, Bons du tresor, Obligation Adossee a des Actifs, Obligations, Titres adosses a des actifs, Papier commercial, Titres adosses a des actifs\n    ", "to": "QRM"}, {"arrows": "to", "color": "#FFA500", "dashes": false, "from": "QRM", "label": "T2F", "title": "\n         Products: TD, Preferred_Stocks\n    ", "to": "ORM"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "expor", "label": "MFT", "title": "\n         Products: SET ACSS, Bond, Debenture, Mid term note, FUNDED CDO, COLLATERAL CDO, COMMODITY FUTURE, COMMODITY OPTION OTC, COMMODITY FUTURE OPTION, CDS Single Name, CDX, Cross currency Swap, Cash Collateral Deriv, SECURITY COLLATERAL DERIV, CASH COLLATERAL, SECURITY COLLATERAL, Equity Index Future, EQUITY FUTURE, Equity Future Option, Equity Index Future Option, Equity Index-Basket Option, Equity Option, Warrant, EQUITY INDEX SWAP, Equity TRS, FX Average Rate Forward Strip, FX Average Rate Fwd Explicit, FX Average Strike Forward, FX Forward, FX Forward Strip, FX NonDeliverable Forward, FX Spot, FX Time Option, FX Future\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "anvil", "label": "MFT", "title": "\n         Products: Repo, Reverse Repo\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "bondedge", "label": "MFT", "title": "\n         Products: Obligation Adossee a des Actifs, Bond, Debenture, Mid term note, FUNDED CDO\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "dflb", "label": "MFT", "title": "\n         Products: Ligne de credit Main Line, Prets, Prets Hypothecaires\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "eagle", "label": "MFT", "title": "\n         Products: Acceptations achetees, Actions, Certificat de depot, Billets au porteur a escompte, Bons du tresor, Obligations, Papier Commercial, Titres adosses a des actifs, Bond, Debenture, Mid term note, FUNDED CDO, COMMODITY FUTURE, CDS Single Name, CDX, Cash Collateral Deriv, SECURITY COLLATERAL DERIV, CASH COLLATERAL, SECURITY COLLATERAL, Equity Index Future, EQUITY FUTURE, Equity Future Option, Equity Index Future Option, Equity Index-Basket Option, Equity Option, Warrant, EQUITY INDEX SWAP, Equity TRS, FX Average Rate Forward Strip, FX Average Rate Fwd Explicit, FX Average Strike Forward, FX Forward, FX Forward Strip, FX NonDeliverable Forward, FX Spot, FX Time Option, FX Future\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "exporvmd", "label": "MFT", "title": "\n         Products: Bond, Debenture, Mid term note, FUNDED CDO, CASH MARGIN ACCOUNT - CASH, CASH MARGIN ACCOUNT - SECURITY, CDO ACCOUNT- CASH, CDO ACCOUNT- SECURITY, CDS Single Name, CDX, CUSTODIAN ACCOUNT - CASH, CUSTODIAN ACCOUNT - SECURITY, CURRENCY CONVERSION, Cash Collateral Deriv, SECURITY COLLATERAL DERIV, CASH COLLATERAL, SECURITY COLLATERAL, Equity Future Option, Equity Index Future Option, Equity Index-Basket Option, Equity Option, Warrant\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "fiserv", "label": "MFT", "title": "\n         Products: Lettre de garantie, Marge Classique/Decouvert, Marge de credit hypothecaire, Certificat de depot, Epargne, Epargne avec operations, Prets, Marge de credit hypothecaire, Prets Hypothecaires\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "flex", "label": "MFT", "title": "\n         Products: Actions, Autres, Lettre de credit, Lettre de garantie, Marge Classique/Decouvert, Nostros, Vostros, Epargne avec operations, Prets, LOAN, LINE OF CREDIT\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "murex", "label": "MFT", "title": "\n         Products: Options - Taux d\u0027interet - Cap\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "sgf", "label": "MFT", "title": "\n         Products: Epargne, Epargne avec operations, Prets\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "sic", "label": "MFT", "title": "\n         Products: Lettre de credit, Lettre de garantie, Marge Classique/Decouvert, Marge de credit hypothecaire, Epargne, Epargne avec operations, Prets, Prets Hypothecaires, Prets etudiants\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "sophy", "label": "MFT", "title": "\n         Products: Titres adosses a des actifs, LOAN, LINE OF CREDIT\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "ubix", "label": "MFT", "title": "\n         Products: Futures/Forward - Obligations\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "unitrax", "label": "MFT", "title": "\n         Products: Certificat de depot, Epargne\n    ", "to": "FSDF"}, {"arrows": "to", "color": "#FFA500", "dashes": true, "from": "valmobil", "label": "MFT", "title": "\n         Products: Futures/Forward - Obligations, Certificat de depot, Epargne avec operations, Billets, Billets au porteur a escompte\n    ", "to": "FSDF"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

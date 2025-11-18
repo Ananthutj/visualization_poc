@@ -1,62 +1,13 @@
-# import streamlit as st
-# import base64
-
-# st.set_page_config(page_title="Secure Streamlit Portal", layout="centered")
-# st.title("🔐 Secure Streamlit Portal")
-
-# # ---------------------------
-# # Get the Base64 encoded email from URL
-# # ---------------------------
-# params = st.experimental_get_query_params()
-# encoded_data = params.get("data", [""])[0]
-
-# if not encoded_data:
-#     st.error("❌ Invalid access. Please open this app through Power Apps.")
-#     st.stop()
-
-# # Decode the email
-# try:
-#     decoded_email = base64.b64decode(encoded_data).decode("utf-8")
-# except Exception:
-#     st.error("❌ Invalid or corrupted link.")
-#     st.stop()
-
-# # ---------------------------
-# # Ask user to enter their email for verification
-# # ---------------------------
-# st.write("Please verify your email to continue:")
-# user_email = st.text_input("Enter your company email:")
-
-# if st.button("Verify"):
-#     if not user_email:
-#         st.warning("Please enter your email.")
-#     elif user_email.strip().lower() == decoded_email.strip().lower():
-#         st.success(f"✅ Access granted! Welcome, {user_email}")
-        
-#         # ---------------------------
-#         # Secure section (visible only after verification)
-#         # ---------------------------
-#         st.write("This is your secure content area.")
-#         st.write("You can now show dashboard, data, or reports here.")
-
-#     else:
-#         st.error("❌ Email does not match. Access denied.")
-
-
-# streamlit_page_name: Data Flow Graph
+#This is the code for the graph with checkboxes in the sidebar to show graphs
+#1. with products
+#2. without products
 
 import streamlit as st
 import pandas as pd
 import graphviz
 import textwrap
 
-# st.set_page_config(page_title="Data Flow Graph", layout="wide")
-st.set_page_config(
-    page_title="Home",
-    page_icon="🏠",
-    layout="wide"
-)
-
+st.set_page_config(page_title="Data Flow Graph", layout="wide")
 st.title("L-R Directed Data Flow")
 
 file_path = "Sooraj7.xlsx"
@@ -92,15 +43,11 @@ else:
 
 product_filter = st.sidebar.selectbox("Product:", product_options)
 target_filter = st.sidebar.selectbox("System:", target_options)
-graph_choice = st.sidebar.radio(
-    "Select Graph Type:",
-    ["Summary Graph", "Detailed Graph"],
-    index=0
-)
+show_with_products = st.sidebar.checkbox("Summary Graph", value=True)
+show_without_products = st.sidebar.checkbox("Detailed Graph", value=False)
 
-if st.sidebar.button("System Info"):
-    st.switch_page("pages/System_Info")
-
+if not show_with_products and not show_without_products:
+    st.sidebar.warning("Please select at least one option to display.")
 
 filtered_df = df.copy()
 if upstream_filter != "All":
@@ -171,6 +118,7 @@ def add_node(dot_obj, node, color, include_products=False):
     <TABLE BORDER="0" CELLBORDER="0" CELLPADDING="1" CELLSPACING="0">
         <TR><TD ALIGN="CENTER"><B><FONT POINT-SIZE='10'>{node}</FONT></B></TD></TR>
         <TR><TD ALIGN="CENTER"><FONT POINT-SIZE='9'>{wrapped_system_name}</FONT></TD></TR>
+        <TR><TD ALIGN="CENTER"><FONT POINT-SIZE='9'>{desc}</FONT></TD></TR>
     </TABLE>
     """
 
@@ -180,12 +128,12 @@ def add_node(dot_obj, node, color, include_products=False):
 
     if include_products:
         rows += """<TR><TD BORDER="0" BGCOLOR="black" HEIGHT="1" FIXEDSIZE="TRUE" WIDTH="100%"></TD></TR>"""
-        rows += f"""<TR><TD ALIGN="CENTER"><FONT POINT-SIZE="10"><B><U>Products:</U></B></FONT></TD></TR>"""
+        rows += f"""<TR><TD ALIGN="CENTER"><FONT POINT-SIZE="10"><B><U>Products</U></B></FONT></TD></TR>"""
         all_products = sorted(set(incoming + outgoing))
         if all_products:
             for p in all_products:
                 wrapped = wrap_text(str(p), width=30)
-                rows += f"""<TR><TD ALIGN="CENTER"><FONT POINT-SIZE="10">{wrapped}</FONT></TD></TR>"""
+                rows += f"""<TR><TD ALIGN="LEFT"><FONT POINT-SIZE="10">{p}</FONT></TD></TR>"""
 
     label = f"""<
     <TABLE BORDER="1" CELLBORDER="0" CELLPADDING="3" CELLSPACING="0"
@@ -216,22 +164,23 @@ def build_graph(include_products=False):
 
     return dot
 
+if show_with_products or show_without_products:
 
-if graph_choice == "Detailed Graph":
-    st.subheader("Detailed Graph")
-    st.graphviz_chart(build_graph(include_products=True), width="stretch")
+    if show_without_products:
+        st.subheader("Detailed Graph")
+        dot_without = build_graph(include_products=True)
+        # st.graphviz_chart(dot_without, use_container_width=True)
+        st.graphviz_chart(dot_without, width="stretch")
+        
 
-elif graph_choice == "Summary Graph":
-    st.subheader("Summary Graph")
-    st.graphviz_chart(build_graph(include_products=False), width="stretch")
-
-elif graph_choice == "Both":
-    st.subheader("Detailed Graph")
-    st.graphviz_chart(build_graph(include_products=True), width="stretch")
-
-    st.subheader("Summary Graph")
-    st.graphviz_chart(build_graph(include_products=False), width="stretch")
+    if show_with_products:
+        st.subheader("Summary Graph")
+        dot_with = build_graph(include_products=False)
+        #st.graphviz_chart(dot_with, use_container_width=True)
+        st.graphviz_chart(dot_with, width="stretch")
+       
 
 else:
-    st.warning("Please select a graph type from the sidebar.")
+    st.warning("Please select at least one option to display the graph.")
+
 
